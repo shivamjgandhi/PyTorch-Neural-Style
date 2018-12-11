@@ -10,11 +10,11 @@ class contentLoss(nn.Module):
 	output of the layer at layer L.
 	"""
 	def __init__(self, FCL):
-		super(StyleLoss, self).__init__()
-		self.FCL = gram_matrix(FCL).detach()
+		super(contentLoss, self).__init__()
+		self.FCL = FCL.detach()
 
 	def forward(self, FXC):
-		loss = nn.MSELoss(self.FCL, FXC)
+		self.loss = F.MSELoss(self.FCL, FXC)
 		return FXC
 
 def gramMatrix(FXL):
@@ -26,7 +26,20 @@ def gramMatrix(FXL):
 	# b = number of feature maps
 	# c, d = size of matrix itself
 	hatFXL = FXL.view(a*b, c*d)
-	gram = hatFXL
+	gram = torch.mm(hatFXL, torch.t(hatFXL))
+	return gram.div(a*b*c*d)
 
 class styleLoss(nn.Module):
 	"""
+	This is the class for computing styleLoss.
+
+	Looks almost exactly like the loss for the content.
+	"""
+	def __init__(self, FSL):
+		super(styleLoss, self).__init__()
+		self.GSL = gramMatrix(FSL).detach()
+
+	def forward(self, FXL):
+		GXL = gramMatrix(FXL)
+		self.loss = F.MSELoss(self.GSL, GXL)
+		return FXL
