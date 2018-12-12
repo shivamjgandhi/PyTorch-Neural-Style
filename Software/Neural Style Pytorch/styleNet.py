@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F 
 
+from loss_functions import *
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 cnn = models.vgg19(pretrained=True).features.to(device).eval()
 
@@ -22,3 +24,60 @@ class normalize(nn.Module):
 
 	def forward(self, img):
 		return (img - self.mean)/self.std
+
+# based on the paper, we can see which layers are default usage for content and style
+content_layers_default = ['conv_4']
+style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
+
+def get_style_model_and_loss(cnn, normalization_mean, normalization_std, 
+	style_img, content_img, content_layers = content_layers_default,
+	style_layers = style_layers_default):
+
+	cnn = copy.deepcopy(cnn)
+
+	# normalization module
+	normalization = normalize(normalization_mean, normalization_std).to(device)
+
+	# to have iterable access to list of losses
+	content_losses = []
+	style_losses = []
+
+	# want to iterate for every convolution layer
+	i = 0
+	for layer in cnn.children():
+		if isinstance(layer, conv2d):
+			i = i+1
+			name = 'conv_{}'.format(i)
+		elif isinstance(layer, nn.ReLU:
+			name = 'relu_{}'.format(i)
+			layer = nn.ReLU(inplace = False)
+		elif isinstance(layer, MaxPool2D):
+			name = 'pool2d_{}'.format(i)
+		elif isinstance(layer, BatchNorm2d):
+			name = 'batchNorm_{}'.format(i)
+		else:
+			raise RunTimeError("Uncrecognized layer {}".format{layer.__class__.__name__})
+
+		model.add_module(name, layers)
+
+		if name in content_layers:
+			# Compute the content loss
+			FCL = model(content_img).detach()
+			content_loss = contentLoss(FCL)
+			model.add_module("content_loss_{}".format(i), content_loss)
+			content_losses.append(content_loss)
+		elif name in style_layers:
+			# Compute the style loss
+			FSL = model(style_img).detach()
+			style_loss = styleLoss(FSL)
+			model.add_module("style_loss_{}".format(i), style_loss)
+			style_losses.append(style_loss)
+
+	# trim off the layers after the last content and style losses
+	for i in range(len(model) - 1, -1, -1):
+		if isinstance(model[i], contentLoss) or isinstance(model[i], styleLoss):
+			break
+
+	model = model[:(i+1)]
+
+	return content_losses, style_losses, model
