@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F 
 
+import torchvision.models as models
+import copy 
+
 from loss_functions import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -42,23 +45,27 @@ def get_style_model_and_loss(cnn, normalization_mean, normalization_std,
 	content_losses = []
 	style_losses = []
 
+	# We create a new sequential model to put in modules that
+	# are activated sequentially
+	model = nn.Sequential(normalization)
+
 	# want to iterate for every convolution layer
 	i = 0
 	for layer in cnn.children():
-		if isinstance(layer, conv2d):
+		if isinstance(layer, nn.Conv2d):
 			i = i+1
 			name = 'conv_{}'.format(i)
-		elif isinstance(layer, nn.ReLU:
+		elif isinstance(layer, nn.ReLU):
 			name = 'relu_{}'.format(i)
 			layer = nn.ReLU(inplace = False)
-		elif isinstance(layer, MaxPool2D):
+		elif isinstance(layer, nn.MaxPool2d):
 			name = 'pool2d_{}'.format(i)
-		elif isinstance(layer, BatchNorm2d):
+		elif isinstance(layer, nn.BatchNorm2d):
 			name = 'batchNorm_{}'.format(i)
 		else:
-			raise RunTimeError("Uncrecognized layer {}".format{layer.__class__.__name__})
+			raise RunTimeError("Uncrecognized layer {}".format(layer.__class__.__name__))
 
-		model.add_module(name, layers)
+		model.add_module(name, layer)
 
 		if name in content_layers:
 			# Compute the content loss

@@ -12,7 +12,7 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 	style_weight=1000000, content_weight=1):
 	""" Run the style transfer"""
 	print('Building the style transfer model...')
-	style_losses, content_losses, model = get_style_model_and_losses(cnn,
+	style_losses, content_losses, model = get_style_model_and_loss(cnn,
 		normalization_mean, normalization_std, style_img, content_img)
 	optimizer = optimize(input_img)
 
@@ -39,7 +39,7 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 			content_score *= content_weight
 
 			loss = style_score + content_score
-			loss.backwards()
+			loss.backward()
 
 			run[0] += 1
 			if run[0] % 50 == 0:

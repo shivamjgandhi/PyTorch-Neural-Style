@@ -14,7 +14,7 @@ class contentLoss(nn.Module):
 		self.FCL = FCL.detach()
 
 	def forward(self, FXC):
-		self.loss = F.MSELoss(self.FCL, FXC)
+		self.loss = F.mse_loss(self.FCL, FXC)
 		return FXC
 
 def gramMatrix(FXL):
@@ -41,5 +41,5 @@ class styleLoss(nn.Module):
 
 	def forward(self, FXL):
 		GXL = gramMatrix(FXL)
-		self.loss = F.MSELoss(self.GSL, GXL)
+		self.loss = F.mse_loss(self.GSL, GXL)
 		return FXL
