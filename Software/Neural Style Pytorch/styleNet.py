@@ -81,3 +81,4 @@ def get_style_model_and_loss(cnn, normalization_mean, normalization_std,
 	model = model[:(i+1)]
 
 	return content_losses, style_losses, model
+
